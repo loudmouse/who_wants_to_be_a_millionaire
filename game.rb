@@ -15,7 +15,7 @@ def initialize
   @winnings = nil
   @guaranteed = []
   system "clear"
-  puts "Let's Play Who Wants to Be a Millionaire!"
+  puts "Welcome to Who Wants to Be a Millionaire!"
   puts
 end
 
@@ -30,6 +30,7 @@ def play
   display_choices
   walk_away?
   get_decision
+  timer
   get_guess
   check_answer
   increment_round
@@ -47,19 +48,26 @@ end
 
 def display_question
   puts "Question #{@round +1} is for #{display_purse}."
+  puts
   @questions.get_question
+end
+
+def reset_guess
+  @guess = nil
 end
 
 
 def walk_away?
   if @round >= 1
-    puts "Which would you like to do?"
+    puts "Before answering, you have a decision to make. Which would you like to do?"
     puts
     puts "1. Keep Playing"
     puts "2. Walk Away with #{@winnings}."
     puts
     puts "Type 1 or 2."
+    puts
     @walk_away_decision = gets.chomp.to_i
+    puts
   end
 end
 
@@ -67,6 +75,8 @@ def get_decision
   while @round >= 1
     if @walk_away_decision == 1
       puts "Great, let's play on. Good luck!"
+      puts
+      reset_guess
       display_question
       display_choices
       return
@@ -127,7 +137,6 @@ def check_answer
   end
 end
 
-
 def award_prize
   @money.get_money
   puts
@@ -148,6 +157,7 @@ end
 def is_millionaire?
   if @round == 14
     puts "Congratulations, you are a millionaire!"
+    system(%Q{say -v "Fred" "Congratulations, you are a millionaire!"})
   end
 end
 
@@ -161,7 +171,30 @@ def game_over?
   end
 end
 
-
+def timer
+  Thread.new do
+    if @round == 0 || @round == 1 || @round == 2 || @round == 3 || @round == 4
+      seconds = 15
+    elsif @round == 5 || @round == 6 || @round == 7 || @round == 8 || @round == 9
+      seconds = 30
+    else
+      seconds = 45
+    end
+    puts "In this tier you get #{seconds} seconds to answer."
+    countdown = seconds.downto(0) do |s|
+      puts "Timer: #{s}"
+      sleep 1
+      break if @guess == 1 || @guess == 2 || @guess == 3 || @guess == 4
+      if s == 0
+        puts
+        puts "Time's up! You lose!"
+        puts
+        @round = 100
+        game_over?
+      end
+    end
+  end
+end
 
 
 end
